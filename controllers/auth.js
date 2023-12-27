@@ -55,8 +55,9 @@ export const login = async (req, res) => {
       return res.status(400).json({ msg: "User does not exist..." });
     }
 
-      const token = jwt.sign({ id: user._id }, process.env.JWT_TOKEN);
-      delete user.password;
+    const token = jwt.sign({ id: user._id }, process.env.JWT_TOKEN);
+    delete user.password;
+    return res.status(200).json({ token, user });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
