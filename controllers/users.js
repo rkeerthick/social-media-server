@@ -1,4 +1,6 @@
+import mongoose from "mongoose";
 import User from "../modals/User.js";
+
 
 // Read
 
@@ -35,25 +37,36 @@ export const getUserFriends = async (req, res) => {
 
 export const addRemoveFriend = async (req, res) => {
   try {
+    const ObjectId = mongoose.Types.ObjectId;
+
     const { id, friendId } = req.params;
-    const user = await User.findById(id);
-    const friend = await User.findById(friendId);
-    if (user.friend.includes(friendId)) {
-      user.friend = user.friend.filter((id) => id !== friendId);
-      friend.friend = friend.friend.filter((id) => id !== id);
+
+    const userId = new ObjectId(id); // Convert to ObjectId
+    const user = await User.findById(userId);
+
+    const frndId = new ObjectId(friendId); // Convert to ObjectId
+    const friend = await User.findById(frndId);
+
+    if (user.friends.includes(friendId)) {
+      user.friends = user.friends.filter(
+        (friend) => friend.toString() !== friendId
+      );
+      friend.friends = friend.friends.filter(
+        (friend) => friend.toString() !== id
+      );
     } else {
-      user.friend.push(friendId);
-      friend.friend.push(id);
+      user.friends.push(friendId);
+      friend.friends.push(id);
     }
 
     await user.save();
     await friend.save();
 
     const friends = await Promise.all(
-      user.friend.map((id) => User.findById(id))
+      user.friends.map((friend) => User.findById(friend))
     );
 
-    const formattedFriends = await friends.map(
+    const formattedFriends = friends.map(
       ({ _id, firstName, lastName, occupation, location, picturePath }) => {
         return {
           _id,
@@ -70,3 +83,4 @@ export const addRemoveFriend = async (req, res) => {
     res.status(404).json({ error: error.message });
   }
 };
+
